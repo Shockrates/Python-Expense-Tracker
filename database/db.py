@@ -112,6 +112,17 @@ class MyDatabase:
             self.data = self.getAllExpenses()        
         except Exception as e:
             print(e) 
+    
+    def updateExpense(self, idx, date, value , categoryIdx, userIdx):
+        expenseDate = date.strftime("%Y-%m-%d")
+        value = float(value.replace(',', '.'))
+        try:
+            cur = self.conn.cursor()
+            cur.execute("UPDATE expenses SET date=?, value=?, cat_id=?, user_id=? WHERE expense_id=?",(expenseDate, value, categoryIdx, userIdx, idx))
+            self.conn.commit()
+            cur.close()        
+        except Exception as e:
+            print(e) 
 
 # db = MyDatabase('expenses.db')
 # #TEST DATA

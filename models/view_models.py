@@ -10,12 +10,12 @@ class Models:
         
 
     def getExpenseModel(self, month, category, user):
-            df = self.db.getAllExpenses()
-            filteredData = df.loc[(df['date'].str.contains(pat = month)) & (df['username'].str.contains(pat = user)) & (df['category_name'].str.contains(pat = category))]
-            self.total = filteredData['value'].sum().round(3)
-            # print(filteredData)
-            self.dfModel = ExpensesAbstractTableModel(data=filteredData)
-            return self.dfModel
+        df = self.db.getAllExpenses()
+        filteredData = df.loc[(df['date'].str.contains(pat = month)) & (df['username'].str.contains(pat = user)) & (df['category_name'].str.contains(pat = category))]
+        self.total = filteredData['value'].sum().round(3)
+        # print(filteredData)
+        self.dfModel = ExpensesAbstractTableModel(data=filteredData)
+        return self.dfModel
 
     def getMonthsModel(self):
         df = self.db.getAllMonths()

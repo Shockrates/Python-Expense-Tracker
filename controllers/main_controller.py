@@ -1,21 +1,19 @@
 from PySide2.QtCore import QObject, QRegExp, QSortFilterProxyModel, Qt, SIGNAL, Slot
 from PySide2.QtGui import QFont
 from datetime import datetime, date
-# from models.expensesAbstractTableModel import ExpensesAbstractTableModel
-# from models.categoriesAbstractTableModel import CategoriesAbstractListModel
-# from models.usersAbstractListModel import UsersAbstractListModel
-# from models.monthsAbstractListModel import MonthsAbstractListModel
+from main_window import MainWindow
+from expenseform_window import ExpenseForm
 from models.view_models import Models
 from database.db import MyDatabase
 
 class MainController(QObject):
-    def __init__(self, view):
+    def __init__(self):
         super().__init__()
-        self._view = view
+        self._view = MainWindow()
+        self._expenseForm = None
         self._models = Models()
-        
-       
-        
+        self.db =  MyDatabase('expenses.db')
+            
         self._view.userFilter.setModel(self._models.getUsersModel())
         self._view.categoryFilter.setModel(self._models.getCategoriesModel())
         self._view.dateFilter.setModel(self._models.getMonthsModel())
@@ -24,10 +22,10 @@ class MainController(QObject):
 
         self._view.categoryInput.setModel(self._models.getCategoriesModel())
         self._view.userInput.setModel(self._models.getUsersModel())
-
-        
+    
         self.updateTableView()
         self.connectSignals()
+        self.initializeMainWindow()
 
     @Slot()
     def connectSignals(self):
@@ -47,12 +45,6 @@ class MainController(QObject):
         self._view.userInput.activated.connect(self.check_disable)
         self._view.categoryInput.activated.connect(self.check_disable)
 
-        #checks when the "UPDATE EXPENSE (ΕΝΗΜΕΡΩΣΗ)" button is pressed
-        #self._view.expenseForm.updateExpenseBtn.clicked.connect(self.updateExpense)
-        #checks when the "DELETE EXPENSE (ΔΙΑΓΑΡΦΗ)" button is pressed
-        self._view.expenseForm.clicked.connect(self.deleteExpense)
-
-
     @Slot()
     def updateTableView(self):
 
@@ -65,21 +57,19 @@ class MainController(QObject):
         category = self._view.categoryFilter.currentText()
         #Gets Selected User
         user = self._view.userFilter.currentText()
-
         #Create a model based on the selections
         self.expenseModel = self._models.getExpenseModel(text, category, user)
         #Sets the View
-        self._view.expenseTable.setModel(self.expenseModel)
-        
+        self._view.expenseTable.setModel(self.expenseModel)  
         #Hides the Index Column
         self._view.expenseTable.setColumnHidden(0, True)
-        #self._view.testLineEdit.setText(str(self._expensesModel.getTotal()))
-    
+        
+      
+        
     @Slot()
     def getSelectedRowData(self, index):
-        font = QFont
+        
         displayString = ''
-        selected_indexes = self._view.expenseTable.selectionModel().selectedRows()  
         row = index.row()
         expenseList = [self._view.expenseTable.model().index(row, col).data()
                 for col in range(self._view.expenseTable.model().columnCount(0))]
@@ -98,66 +88,73 @@ class MainController(QObject):
     
     @Slot()
     def addNewExpense(self):  
+    
+        date = self._view.dateInput.date().toPython() 
+        value = self._view.valueInput.text()
+        categoryIdx = self._view.categoryInput.currentIndex()
+        userIdx = self._view.userInput.currentIndex()
+        print("categoryIdx: ", categoryIdx, "userIdx: ", userIdx)
+        self.db.insertExpenses(value, date, categoryIdx, userIdx)
+        self.updateTableView()
+        selectedDate =  self._view.dateFilter.currentIndex()
+        self._view.dateFilter.setModel(self._models.getMonthsModel()) 
+        self._view.dateFilter.setCurrentIndex(selectedDate)
         
-            date = self._view.dateInput.date().toPython() 
-            value = self._view.valueInput.text()
-            categoryIdx = self._view.categoryInput.currentIndex()
-            userIdx = self._view.userInput.currentIndex()
-            print("categoryIdx: ", categoryIdx, "userIdx: ", userIdx)
-
-            db =  MyDatabase('expenses.db')
-            db.insertExpenses(value, date, categoryIdx, userIdx)
-            self.updateTableView()
-            self._view.dateFilter.setModel(self._models.getMonthsModel())      
-
     @Slot()
     def openUpdateWindow(self, index):
-      
-        selected_indexes = self._view.expenseTable.selectionModel().selectedRows()  
-        
         row = index.row()
         expenseList = [self._view.expenseTable.model().index(row, col).data()
                     for col in range(self._view.expenseTable.model().columnCount(0))]
-        self._view.expenseForm.updIndex.setText(expenseList[0])            
-        self._view.expenseForm.updDate.setDate(datetime.strptime(expenseList[1], '  %d/%m/%Y  '))
-        self._view.expenseForm.updValue.setText(expenseList[2])
-        self._view.expenseForm.updCategory.setCurrentText(expenseList[3])
-        self._view.expenseForm.updUser.setCurrentText(expenseList[4])
-        self._view.expenseForm.updateExpenseBtn.show()
-        self._view.expenseForm.deleteExpenseBtn.hide()
-        self._view.expenseForm.show()
+        if self._expenseForm is None:
+            self._expenseForm = ExpenseForm()
+     
+        self._expenseForm.openUpdateWindow(expenseList, self._models)
+        self._expenseForm.updateExpenseBtn.clicked.connect(self.updateExpense)
+   
+
+    def updateExpense(self):
+        idx= self._expenseForm.updIndex.text()
+        date = self._expenseForm.updDate.date().toPython() 
+        value = self._expenseForm.updValue.text()
+        categoryIdx = self._expenseForm.updCategory.currentIndex()
+        userIdx = self._expenseForm.updUser.currentIndex()
+        self.db.updateExpense(idx, date, value, categoryIdx, userIdx)
+        self.updateTableView()
+        selectedDate =  self._view.dateFilter.currentIndex()
+        self._view.dateFilter.setModel(self._models.getMonthsModel()) 
+        self._view.dateFilter.setCurrentIndex(selectedDate)      
+        self._expenseForm.close()
+        self._expenseForm = None
+
 
     @Slot()
     def openDeleteWindow(self, index):
-        categoryModel = self._models.getCategoriesModel()
-        userModel = self._models.getUsersModel()
-        self._view.openDeleteWindow(index, categoryModel, userModel)
+        row = index.row()
+        expenseList = [self._view.expenseTable.model().index(row, col).data()
+                    for col in range(self._view.expenseTable.model().columnCount(0))]
+        if self._expenseForm is None:
+            self._expenseForm = ExpenseForm()
+   
+        self._expenseForm.openDeleteWindow(expenseList, self._models)
+        self._expenseForm.deleteExpenseBtn.clicked.connect(self.deleteExpense)
+        
 
-        # selected_indexes = self._view.expenseTable.selectionModel().selectedRows()  
-        # row = index.row()
-        # expenseList = [self._view.expenseTable.model().index(row, col).data()
-        #             for col in range(self._view.expenseTable.model().columnCount(0))]
-        # self._view.expenseForm.updIndex.setText(expenseList[0])            
-        # self._view.expenseForm.updDate.setDate(datetime.strptime(expenseList[1], '  %d/%m/%Y  '))
-        # self._view.expenseForm.updDate.setReadOnly(True)
-        # self._view.expenseForm.updValue.setText(expenseList[2])
-        # self._view.expenseForm.updValue.setReadOnly(True)
-        # self._view.expenseForm.updCategory.setCurrentText(expenseList[3])
-        # self._view.expenseForm.updCategory.setEnabled(False)
-        # self._view.expenseForm.updUser.setCurrentText(expenseList[4])
-        # self._view.expenseForm.updUser.setEnabled(False)
-        # self._view.expenseForm.updateExpenseBtn.hide()
-        # self._view.expenseForm.deleteExpenseBtn.show()
-        # self._view.expenseForm.show()
+    def deleteForm(self):
+        self._expenseForm = None
+
     @Slot()
     def deleteExpense(self):
-        idx= self._view.expenseForm.updIndex.text()
+        idx= self._expenseForm.updIndex.text()
         # print(index.data(),"row:",index.row())  
         self.db.deleteExpense(idx)
         self.updateTableView()
-        self._view.dateFilter.setModel(self._models.getMonthsModel())  
-        self._view.expenseForm.close()
-
+        selectedDate =  self._view.dateFilter.currentIndex()
+        self._view.dateFilter.setModel(self._models.getMonthsModel()) 
+        self._view.dateFilter.setCurrentIndex(selectedDate)
+        self._expenseForm.close() 
+        self._expenseForm = None
+       
+        
 
     @Slot()
     def check_disable(self):
@@ -166,3 +163,9 @@ class MainController(QObject):
             self._view.addExpenseBtn.setEnabled(False)
         else:
             self._view.addExpenseBtn.setEnabled(True)
+    
+    def showMainWindow(self):
+        self._view.show()
+
+    def initializeMainWindow(self):
+        self._view.show()
