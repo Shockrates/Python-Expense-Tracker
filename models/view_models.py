@@ -5,8 +5,9 @@ from datetime import datetime
 from database.db import MyDatabase
 
 class Models:
-    def __init__(self):
-        self.db = MyDatabase('expenses.db')
+    def __init__(self, db):
+        # self.db = MyDatabase('expenses.db')
+        self.db = db
         
 
     def getExpenseModel(self, month, category, user):

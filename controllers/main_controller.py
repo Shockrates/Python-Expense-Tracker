@@ -11,21 +11,12 @@ class MainController(QObject):
         super().__init__()
         self._view = MainWindow()
         self._expenseForm = None
-        self._models = Models()
         self.db =  MyDatabase('expenses.db')
-            
-        self._view.userFilter.setModel(self._models.getUsersModel())
-        self._view.categoryFilter.setModel(self._models.getCategoriesModel())
-        self._view.dateFilter.setModel(self._models.getMonthsModel())
-        curIndex=self._view.dateFilter.findText(date.today().strftime("%B-%Y"))
-        self._view.dateFilter.setCurrentIndex(curIndex)
-
-        self._view.categoryInput.setModel(self._models.getCategoriesModel())
-        self._view.userInput.setModel(self._models.getUsersModel())
-    
-        self.updateTableView()
+        self._models = Models(self.db)
+     
+        self._view.initializeView(self._models)
         self.connectSignals()
-        self.initializeMainWindow()
+        # self.initializeMainWindow()
 
     @Slot()
     def connectSignals(self):
@@ -45,45 +36,22 @@ class MainController(QObject):
         self._view.userInput.activated.connect(self.check_disable)
         self._view.categoryInput.activated.connect(self.check_disable)
 
-    @Slot()
+   
     def updateTableView(self):
-
-        #Gets the selected Month 
-        if len(self._view.dateFilter.currentText()) == 0:
-            text=""
-        else:
-            text = datetime.strptime(self._view.dateFilter.currentText(), "%B-%Y").strftime("%Y-%m")
-        #Gets Selected Category
-        category = self._view.categoryFilter.currentText()
-        #Gets Selected User
-        user = self._view.userFilter.currentText()
-        #Create a model based on the selections
-        self.expenseModel = self._models.getExpenseModel(text, category, user)
-        #Sets the View
-        self._view.expenseTable.setModel(self.expenseModel)  
-        #Hides the Index Column
-        self._view.expenseTable.setColumnHidden(0, True)
+        self._view.updateTableView(self._models)
+ 
+    def updateDateView(self):
+        self._view.updateDateView(self._models)
         
       
         
     @Slot()
     def getSelectedRowData(self, index):
         
-        displayString = ''
         row = index.row()
         expenseList = [self._view.expenseTable.model().index(row, col).data()
                 for col in range(self._view.expenseTable.model().columnCount(0))]
-        self._view.dateInput.setDate(datetime.strptime(expenseList[1], '  %d/%m/%Y  '))
-        self._view.valueInput.setText(expenseList[2])
-        self._view.categoryInput.setCurrentText(expenseList[3])
-        self._view.userInput.setCurrentText(expenseList[4])  
-
-        displayString +="<span style=' font-weight:600;'>Date: "+str(expenseList[1])+"</span><br>"
-
-        displayString +="Value: "+str(expenseList[2])+"<br>"  
-        displayString +="Category: "+str(expenseList[3])+"<br>"
-        displayString +="User: "+str(expenseList[4])+"<br>"
-        self._view.displaySelection.setText(displayString)
+        self._view.getSelectedRowData(expenseList)
         self.check_disable()
     
     @Slot()
@@ -96,9 +64,7 @@ class MainController(QObject):
         print("categoryIdx: ", categoryIdx, "userIdx: ", userIdx)
         self.db.insertExpenses(value, date, categoryIdx, userIdx)
         self.updateTableView()
-        selectedDate =  self._view.dateFilter.currentIndex()
-        self._view.dateFilter.setModel(self._models.getMonthsModel()) 
-        self._view.dateFilter.setCurrentIndex(selectedDate)
+        self.updateDateView()
         
     @Slot()
     def openUpdateWindow(self, index):
@@ -107,9 +73,9 @@ class MainController(QObject):
                     for col in range(self._view.expenseTable.model().columnCount(0))]
         if self._expenseForm is None:
             self._expenseForm = ExpenseForm()
-     
         self._expenseForm.openUpdateWindow(expenseList, self._models)
         self._expenseForm.updateExpenseBtn.clicked.connect(self.updateExpense)
+        self._expenseForm.c.close.connect(self.deleteForm)
    
 
     def updateExpense(self):
@@ -120,9 +86,7 @@ class MainController(QObject):
         userIdx = self._expenseForm.updUser.currentIndex()
         self.db.updateExpense(idx, date, value, categoryIdx, userIdx)
         self.updateTableView()
-        selectedDate =  self._view.dateFilter.currentIndex()
-        self._view.dateFilter.setModel(self._models.getMonthsModel()) 
-        self._view.dateFilter.setCurrentIndex(selectedDate)      
+        self.updateDateView()      
         self._expenseForm.close()
         self._expenseForm = None
 
@@ -134,28 +98,24 @@ class MainController(QObject):
                     for col in range(self._view.expenseTable.model().columnCount(0))]
         if self._expenseForm is None:
             self._expenseForm = ExpenseForm()
-   
         self._expenseForm.openDeleteWindow(expenseList, self._models)
         self._expenseForm.deleteExpenseBtn.clicked.connect(self.deleteExpense)
+        self._expenseForm.c.close.connect(self.deleteForm)
         
-
-    def deleteForm(self):
-        self._expenseForm = None
-
     @Slot()
     def deleteExpense(self):
         idx= self._expenseForm.updIndex.text()
         # print(index.data(),"row:",index.row())  
         self.db.deleteExpense(idx)
         self.updateTableView()
-        selectedDate =  self._view.dateFilter.currentIndex()
-        self._view.dateFilter.setModel(self._models.getMonthsModel()) 
-        self._view.dateFilter.setCurrentIndex(selectedDate)
+        self.updateDateView()
         self._expenseForm.close() 
         self._expenseForm = None
        
         
-
+    def deleteForm(self):
+        self._expenseForm = None
+    
     @Slot()
     def check_disable(self):
         #pass
@@ -163,9 +123,4 @@ class MainController(QObject):
             self._view.addExpenseBtn.setEnabled(False)
         else:
             self._view.addExpenseBtn.setEnabled(True)
-    
-    def showMainWindow(self):
-        self._view.show()
-
-    def initializeMainWindow(self):
-        self._view.show()
+ 

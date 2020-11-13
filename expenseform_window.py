@@ -3,15 +3,18 @@ from resources.expenseform import Ui_Form
 from PySide2.QtWidgets import QMainWindow
 from datetime import datetime, date
 
-class ExpenseForm(QMainWindow, Ui_Form):
-
+#DECLARE CLASS IN ORDER TOSEND A SIGNAL
+class Communicate(QtCore.QObject):
     
+    close = QtCore.Signal()
 
+
+class ExpenseForm(QMainWindow, Ui_Form):
 
     def __init__(self):
         super(ExpenseForm, self).__init__()
         self.setupUi(self)
-        self.close = QtCore.Signal()
+        self.c = Communicate()
     
     def openDeleteWindow(self, expenseList, models):
         #INITIALIZES THE expenseForm WINDOW DATA
@@ -44,4 +47,7 @@ class ExpenseForm(QMainWindow, Ui_Form):
         self.deleteExpenseBtn.hide()
         self.show()
     
-    
+    #EMMIT SIGNAL WHEN WINDOW CLOSES
+    def closeEvent(self, event):
+        self.c.close.emit()
+        

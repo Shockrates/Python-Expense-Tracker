@@ -187,6 +187,63 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.input_tab, "")
         self.tab_2 = QWidget()
         self.tab_2.setObjectName(u"tab_2")
+        self.gridGroupBox = QGroupBox(self.tab_2)
+        self.gridGroupBox.setObjectName(u"gridGroupBox")
+        self.gridGroupBox.setGeometry(QRect(10, 10, 821, 571))
+        self.gridLayout_2 = QGridLayout(self.gridGroupBox)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(2, -1, -1, -1)
+        self.categoryDataTable = QTableWidget(self.gridGroupBox)
+        self.categoryDataTable.setObjectName(u"categoryDataTable")
+        self.categoryDataTable.setMaximumSize(QSize(460, 16777215))
+
+        self.gridLayout_2.addWidget(self.categoryDataTable, 2, 1, 1, 1)
+
+        self.categoryDataLabel = QLabel(self.gridGroupBox)
+        self.categoryDataLabel.setObjectName(u"categoryDataLabel")
+
+        self.gridLayout_2.addWidget(self.categoryDataLabel, 1, 1, 1, 1)
+
+        self.usersDataTable = QListView(self.gridGroupBox)
+        self.usersDataTable.setObjectName(u"usersDataTable")
+        self.usersDataTable.setMinimumSize(QSize(230, 0))
+        self.usersDataTable.setMaximumSize(QSize(200, 16777215))
+
+        self.gridLayout_2.addWidget(self.usersDataTable, 2, 0, 1, 1, Qt.AlignLeft)
+
+        self.usersDataInput = QLineEdit(self.gridGroupBox)
+        self.usersDataInput.setObjectName(u"usersDataInput")
+        self.usersDataInput.setMinimumSize(QSize(230, 0))
+        self.usersDataInput.setMaximumSize(QSize(200, 16777215))
+
+        self.gridLayout_2.addWidget(self.usersDataInput, 3, 0, 1, 1)
+
+        self.dataInputGroup = QGroupBox(self.gridGroupBox)
+        self.dataInputGroup.setObjectName(u"dataInputGroup")
+        self.dataInputGroup.setMaximumSize(QSize(462, 16777215))
+        self.horizontalLayout_2 = QHBoxLayout(self.dataInputGroup)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, -1, -1, -1)
+        self.categoryDataInput = QLineEdit(self.dataInputGroup)
+        self.categoryDataInput.setObjectName(u"categoryDataInput")
+        self.categoryDataInput.setMaximumSize(QSize(230, 16777215))
+
+        self.horizontalLayout_2.addWidget(self.categoryDataInput)
+
+        self.categoryTypoeDataInput = QLineEdit(self.dataInputGroup)
+        self.categoryTypoeDataInput.setObjectName(u"categoryTypoeDataInput")
+        self.categoryTypoeDataInput.setMaximumSize(QSize(230, 16777215))
+
+        self.horizontalLayout_2.addWidget(self.categoryTypoeDataInput)
+
+
+        self.gridLayout_2.addWidget(self.dataInputGroup, 3, 1, 1, 1)
+
+        self.usersDataLabel = QLabel(self.gridGroupBox)
+        self.usersDataLabel.setObjectName(u"usersDataLabel")
+
+        self.gridLayout_2.addWidget(self.usersDataLabel, 1, 0, 1, 1)
+
         self.tabWidget.addTab(self.tab_2, "")
 
         self.horizontalLayout.addWidget(self.tabWidget)
@@ -202,6 +259,9 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
+        self.tabWidget.setCurrentIndex(1)
+
+
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
@@ -216,6 +276,8 @@ class Ui_MainWindow(object):
         self.userInputLbl.setText(QCoreApplication.translate("MainWindow", u"\u03a7\u03a1\u0397\u03a3\u03a4\u0397\u03a3:", None))
         self.dateInputLbl.setText(QCoreApplication.translate("MainWindow", u"\u0397\u039c\u0395\u03a1\u039f\u039c\u0397\u039d\u0399\u0391:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.input_tab), QCoreApplication.translate("MainWindow", u"\u0395\u0399\u03a3\u0391\u0393\u03a9\u0393\u0397", None))
+        self.categoryDataLabel.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.usersDataLabel.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))
     # retranslateUi
 
