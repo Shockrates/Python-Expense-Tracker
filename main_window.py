@@ -17,39 +17,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.horizontal_header.setSectionResizeMode(
                                QHeaderView.ResizeToContents
                                )
-        #self.horizontal_header.setStretchLastSection(True)
         self.horizontal_header.setDefaultAlignment(Qt.AlignLeft)   
         self.expenseTable.verticalHeader().hide()
+
+        #SET QTableView Headers
+        self.horizontal_header = self.categoryDataTable.horizontalHeader() 
+        self.horizontal_header.setSectionResizeMode(
+                               QHeaderView.ResizeToContents
+                               )
+        self.horizontal_header.setDefaultAlignment(Qt.AlignLeft)   
+        self.categoryDataTable.verticalHeader().hide()
+
+
         
         #SET WIDGET BEHAVIOR
         self.dateInput.setDateTime(QDateTime.currentDateTime()) 
         self.expenseTable.setSelectionBehavior(QTableView.SelectRows)
         self.addExpenseBtn.setEnabled(False)
+        self.addUserButton.setEnabled(False)
+        self.addCategoryButton.setEnabled(False)
         validator = QtGui.QDoubleValidator()
         self.valueInput.setValidator(validator)
+
+        #QRegularExpression re("\\S+")
+        inputValidator = QtGui.QRegularExpressionValidator("\\S+")
+        self.usersDataInput.setValidator(inputValidator)
+        self.categoryDataInput.setValidator(inputValidator)
+        self.categoryTypoeDataInput.setValidator(inputValidator)
+        
  
         #SET DELEGATES
         self.editDelegate = PushButtonDelegate(self.expenseTable)
         self.deleteDelegate = PushButtonDelegate(self.expenseTable)
-        self.expenseTable.setItemDelegateForColumn(5, self.editDelegate)
-        self.expenseTable.setItemDelegateForColumn(6, self.deleteDelegate)
+        self.expenseTable.setItemDelegateForColumn(6, self.editDelegate)
+        self.expenseTable.setItemDelegateForColumn(7, self.deleteDelegate)
     
     #SETS STARTING VALUES TO INPUT AND SEARCH FIELDS BASED ON PASSING MODEL
     def initializeView(self, model):
 
+        #INITILLIZE INPUT TAB 
         self.userFilter.setModel(model.getUsersModel())
         self.categoryFilter.setModel(model.getCategoriesModel())
         self.dateFilter.setModel(model.getMonthsModel())
+
         curIndex=self.dateFilter.findText(date.today().strftime("%B-%Y"))
         self.dateFilter.setCurrentIndex(curIndex)
-        self.usersDataTable.setModel(model.getUsersModel())
 
         self.categoryInput.setModel(model.getCategoriesModel())
         self.userInput.setModel(model.getUsersModel())
+
         self.updateTableView(model)
+
+
+        self.usersDataTable.setModel(model.getUsersModel())
+        categoriesModel = model.getCategoriesTableModel()
+        self.categoryDataTable.setModel(categoriesModel)
+        self.categoryDataTable.setColumnHidden(0, True)
+        
+
+        
         self.show()
     
-
+    #UPDATE THE EXPENSE-VIEW WITH A NEW MODEL WHENEVER ONE OF THE FILTER FIELDS CHANGES 
     def updateTableView(self, model):
         #Gets the selected Month 
         if len(self.dateFilter.currentText()) == 0:
@@ -67,10 +96,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #Hides the Index Column
         self.expenseTable.setColumnHidden(0, True)
 
+    #UPDATE THE DATE-FILTER VIEW WITH A NEW MODEL WHEN AN ACTION THAT MAY AD OR REMOVE A NEW DATE HAPENS
     def updateDateView(self, model):
         selectedDate =  self.dateFilter.currentIndex()
         self.dateFilter.setModel(model.getMonthsModel()) 
         self.dateFilter.setCurrentIndex(selectedDate) 
+    
 
     def getSelectedRowData(self, expenseList):
         

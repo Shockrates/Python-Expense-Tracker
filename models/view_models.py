@@ -30,8 +30,13 @@ class Models:
         return self.dfModel
     
     def getCategoriesModel(self):
-        df = self.db.getAllCategories()
+        df = self.db.getAllCategoriesName()
         self.dfModel = CategoriesAbstractListModel(data= df['category_name'])
+        return self.dfModel
+
+    def getCategoriesTableModel(self):
+        df = self.db.getAllCategories()
+        self.dfModel = CategoriesAbstractTableModel(data= df)
         return self.dfModel
 
 class ExpensesAbstractTableModel(QtCore.QAbstractTableModel):
@@ -60,6 +65,7 @@ class ExpensesAbstractTableModel(QtCore.QAbstractTableModel):
                 if isinstance(value, float):
                     # Render float to 2 dp
                     return "%.20f" % value
+                value = value + "   "
                 return value
         return None
     
@@ -67,7 +73,7 @@ class ExpensesAbstractTableModel(QtCore.QAbstractTableModel):
         if role != Qt.DisplayRole:
             return None
         if orientation == Qt.Horizontal:
-            return ("Id", "  Date  ", "  Value  ", "  Category  ", "  Name  ",  " Edit ", " Delete ")[section]
+            return ("Id", "  Date  ", "  Value  ", "  Name  ", "  Category  ", "  Description  ",   " Edit ", " Delete ")[section]
         else:
             return "{}".format(section)
 
@@ -120,3 +126,32 @@ class CategoriesAbstractListModel(QtCore.QAbstractListModel):
 
     def rowCount(self, index):
         return len(self._data.values)
+
+class CategoriesAbstractTableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data):
+        super(CategoriesAbstractTableModel, self).__init__()
+        self._data = data
+        
+
+    def rowCount(self, index):
+        return len(self._data.values)
+
+    def columnCount(self, index):
+        return self._data.columns.size
+
+    def data(self, index, role=Qt.DisplayRole):
+        if index.isValid():
+            if role == QtCore.Qt.DisplayRole:
+                #value = str(self._data.values[index.row()][index.column()])
+                value = str(self._data.iloc[index.row(),index.column()])
+                strValue = value+"  "
+                return strValue
+        return None
+    
+    def headerData(self, section, orientation, role):
+        if role != Qt.DisplayRole:
+            return None
+        if orientation == Qt.Horizontal:
+            return ("id", "  Category  ", "  Description  ")[section]
+        else:
+            return "{}".format(section)

@@ -17,7 +17,7 @@ class MainController(QObject):
         self._view.initializeView(self._models)
         self.connectSignals()
         # self.initializeMainWindow()
-
+        
     @Slot()
     def connectSignals(self):
         #Checks when the Month-Year Combobox Changes 
@@ -31,8 +31,15 @@ class MainController(QObject):
         #Checks when the EDIT and DELETE buttons are pressed
         self._view.editDelegate.clicked.connect(self.openUpdateWindow)
         self._view.deleteDelegate.clicked.connect(self.openDeleteWindow)
+        #Checks when the ADD USER button is clicked
+        self._view.addUserButton.clicked.connect(self.addNewUser)
+        self._view.addCategoryButton.clicked.connect(self.addNewCategory)
+
 
         self._view.valueInput.textChanged[str].connect(self.check_disable)
+        self._view.usersDataInput.textChanged[str].connect(self.check_username_isempty)
+        self._view.categoryDataInput.textChanged[str].connect(self.check_category_isempty)
+        self._view.categoryTypoeDataInput.textChanged[str].connect(self.check_category_isempty)
         self._view.userInput.activated.connect(self.check_disable)
         self._view.categoryInput.activated.connect(self.check_disable)
 
@@ -112,7 +119,35 @@ class MainController(QObject):
         self._expenseForm.close() 
         self._expenseForm = None
        
-        
+
+    def addNewUser(self):  
+        df = self.db.getAllUsers()
+        user = self._view.usersDataInput.text()
+    
+        exists = user in df['username'].values.tolist()
+        if exists:
+            self._view.messageLabel.setText('username exists')
+            print(f"username exists?: {exists}")
+        else:
+            self.db.insertUsers(user)
+            self._view.usersDataTable.setModel(self._models.getUsersModel())
+            self._view.messageLabel.setText('')
+
+    def addNewCategory(self):  
+        df = self.db.getAllCategories()
+        category = self._view.categoryDataInput.text()
+        cattype = self._view.categoryTypoeDataInput.text()
+    
+        exists = category in df['category_name'].values.tolist()
+        if exists:
+            self._view.messageLabel.setText('Category already exists')
+        else:
+            self.db.insertCategories(category, cattype)
+            self._view.categoryDataTable.setModel(self._models.getCategoriesTableModel())
+            self._view.categoryDataTable.setColumnHidden(0, True)
+            self._view.messageLabel.setText('')
+
+       
     def deleteForm(self):
         self._expenseForm = None
     
@@ -123,4 +158,18 @@ class MainController(QObject):
             self._view.addExpenseBtn.setEnabled(False)
         else:
             self._view.addExpenseBtn.setEnabled(True)
- 
+
+    def check_username_isempty(self):
+        if not self._view.usersDataInput.text():
+            self._view.addUserButton.setEnabled(False)
+        else:
+            self._view.addUserButton.setEnabled(True)
+    
+    def check_category_isempty(self):
+        if not self._view.categoryDataInput.text() or not self._view.categoryTypoeDataInput.text():
+            self._view.addCategoryButton.setEnabled(False)
+        else:
+            self._view.addCategoryButton.setEnabled(True)
+
+
+     

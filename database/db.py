@@ -50,7 +50,7 @@ class MyDatabase:
 
     def getAllExpenses(self):
         try:
-            q="""SELECT expenses.expense_id, expenses.date, expenses.value, categories.category_name, users.username 
+            q="""SELECT expenses.expense_id, expenses.date, expenses.value, users.username, categories.category_name, categories.cat_type 
                                 FROM expenses
                                 INNER JOIN users ON expenses.user_id=users.user_id
                                 INNER JOIN categories ON expenses.cat_id=categories.cat_id
@@ -78,7 +78,7 @@ class MyDatabase:
         except Exception as e:
             print(e)
     
-    def getAllCategories(self):
+    def getAllCategoriesName(self):
         try:
             q=("""SELECT category_name 
                     FROM categories""")
@@ -86,6 +86,15 @@ class MyDatabase:
             pddata.loc[-1] = "" # adding a row
             pddata.index = pddata.index + 1  # shifting index
             pddata = pddata.sort_index()  # sorting by index
+            return pddata
+        except Exception as e:
+            print(e)
+
+    def getAllCategories(self):
+        try:
+            q=("""SELECT * 
+                    FROM categories""")
+            pddata = pd.read_sql_query(q, self.conn)
             return pddata
         except Exception as e:
             print(e)
